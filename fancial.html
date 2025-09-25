@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for the chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dark background color */
+        }
+        .card {
+            background: linear-gradient(145deg, #1f2937, #111827);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-card {
+            background: linear-gradient(145deg, #1f2937, #111827);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        .btn-gradient {
+            background-image: linear-gradient(45deg, #3b82f6, #60a5fa);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-gradient:hover {
+            background-image: linear-gradient(45deg, #2563eb, #3b82f6);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Authentication Choice Page -->
+    <div id="auth-choice-page" class="flex flex-col items-center justify-center h-screen hidden">
+        <div class="login-card p-8 rounded-xl max-w-sm w-full text-center space-y-6 animate-fadeIn">
+            <h2 class="text-3xl font-bold text-gray-100">Welcome to your Dashboard</h2>
+            <p class="text-gray-400">Manage your finances with ease.</p>
+            <button id="login-choice-btn" class="w-full py-3 px-6 rounded-xl text-white font-bold btn-gradient">
+                Login
+            </button>
+            <button id="register-choice-btn" class="w-full py-3 px-6 rounded-xl text-white font-bold" style="background-image: linear-gradient(45deg, #10b981, #34d399); transition: all 0.3s ease-in-out;">
+                Register
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login-page" class="flex flex-col items-center justify-center h-screen hidden">
+        <div class="login-card p-8 rounded-xl max-w-sm w-full animate-fadeIn">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-100">Login</h2>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-username" class="block text-sm font-medium text-gray-400">Username</label>
+                    <input type="text" id="login-username" class="mt-1 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-400">Password</label>
+                    <input type="password" id="login-password" class="mt-1 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <button type="submit" class="w-full py-3 px-6 rounded-xl text-white font-bold btn-gradient">
+                    Login
+                </button>
+                <div class="flex justify-between items-center text-sm mt-4">
+                    <button type="button" id="forgot-password-btn" class="text-gray-400 hover:text-white transition-colors duration-200">Forgot Password?</button>
+                    <button type="button" id="back-to-choice-login" class="text-gray-400 hover:text-white transition-colors duration-200">Back</button>
+                </div>
+                <div id="login-message" class="text-sm text-center mt-4 hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration Page -->
+    <div id="register-page" class="flex flex-col items-center justify-center h-screen hidden">
+        <div class="login-card p-8 rounded-xl max-w-sm w-full animate-fadeIn">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-100">Register</h2>
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label for="register-username" class="block text-sm font-medium text-gray-400">Username</label>
+                    <input type="text" id="register-username" class="mt-1 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-400">Password</label>
+                    <input type="password" id="register-password" class="mt-1 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <button type="submit" class="w-full py-3 px-6 rounded-xl text-white font-bold" style="background-image: linear-gradient(45deg, #10b981, #34d399); transition: all 0.3s ease-in-out;">
+                    Register
+                </button>
+                <div class="flex justify-end items-center text-sm mt-4">
+                     <button type="button" id="back-to-choice-register" class="text-gray-400 hover:text-white transition-colors duration-200">Back</button>
+                </div>
+                <div id="register-message" class="text-sm text-center mt-4 hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard-container" class="flex h-screen hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center space-x-2 mb-8">
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 2a2 2 0 100 4 2 2 0 000-4zM21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"></path></svg>
+                    <span class="text-2xl font-bold text-gray-100">DashBoard</span>
+                </div>
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center p-3 rounded-lg text-blue-400 bg-gray-700 transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m0 0l-7 7-7-7m14 0V9a1 1 0 00-1-1h-3m-6 0v10a1 1 0 01-1 1H8a1 1 0 01-1-1v-10"></path></svg>
+                        Dashboard
+                    </a>
+                </nav>
+            </div>
+            <div class="space-y-4">
+                 <button id="logout-btn" class="w-full text-left py-2 px-4 rounded-md text-gray-400 hover:text-blue-400 hover:bg-gray-700 transition-colors duration-200">
+                    <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </button>
+                 <div class="flex items-center space-x-2">
+                    <img src="https://placehold.co/40x40/4b5563/ffffff?text=U" alt="User Profile" class="w-10 h-10 rounded-full">
+                    <span id="user-name-display" class="text-sm font-semibold">User Name</span>
+                 </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-100">Overview</h1>
+                <div class="flex items-center mt-4 md:mt-0 space-x-4">
+                    <button id="add-transaction-btn" class="py-2 px-4 rounded-md text-white font-bold btn-gradient">
+                        Add Transaction
+                    </button>
+                     <button id="set-budget-btn" class="py-2 px-4 rounded-md text-white font-bold" style="background-image: linear-gradient(45deg, #a855f7, #c084fc);">
+                        Set Budget
+                    </button>
+                    <select id="currency-select" class="bg-gray-800 text-white rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="USD">$</option>
+                        <option value="EUR">€</option>
+                        <option value="GBP">£</option>
+                        <option value="INR">₹</option>
+                    </select>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm font-medium text-gray-400">Welcome back,</span>
+                        <span id="dashboard-username" class="font-bold text-blue-400">John</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Card 1 -->
+                <div class="card p-6 rounded-xl flex items-center space-x-4">
+                    <div class="bg-blue-500 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 2a2 2 0 100 4 2 2 0 000-4zM21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Total Balance</p>
+                        <p id="total-balance" class="text-2xl font-bold text-gray-100">$0.00</p>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="card p-6 rounded-xl flex items-center space-x-4">
+                    <div class="bg-green-500 p-3 rounded-full">
+                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zM21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Monthly Income</p>
+                        <p id="monthly-income" class="text-2xl font-bold text-gray-100">$0.00</p>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="card p-6 rounded-xl flex items-center space-x-4">
+                    <div class="bg-red-500 p-3 rounded-full">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zM21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Monthly Expenses</p>
+                        <p id="monthly-expenses" class="text-2xl font-bold text-gray-100">$0.00</p>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="card p-6 rounded-xl flex flex-col justify-center">
+                    <div class="flex items-center space-x-4 mb-2">
+                         <div class="bg-purple-500 p-3 rounded-full">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l-2 2M15 19V6l2 2m-10 0l-2 2-2-2m-2-2H4a1 1 0 00-1 1v2a1 1 0 001 1h2m-2-2h16m-6 0l2 2 2-2m-2-2H18a1 1 0 011 1v2a1 1 0 01-1 1h-2"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400">Monthly Budget</p>
+                            <p id="monthly-budget" class="text-2xl font-bold text-gray-100">$0.00</p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2.5">
+                        <div id="budget-progress" class="bg-purple-500 h-2.5 rounded-full" style="width: 0%;"></div>
+                    </div>
+                     <p id="budget-status" class="text-sm text-gray-400 mt-2">You are within budget</p>
+                     <button id="reset-budget-btn" class="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-md text-sm">
+                        Reset Budget
+                     </button>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="card p-6 rounded-xl mb-8 h-96">
+                <h2 class="text-xl font-bold mb-4">Monthly Spending</h2>
+                <canvas id="myChart" class="w-full h-full"></canvas>
+            </div>
+
+            <!-- Recent Transactions Table -->
+            <div class="card p-6 rounded-xl">
+                <div class="flex justify-between items-center mb-4">
+                     <h2 class="text-xl font-bold">Recent Transactions</h2>
+                     <button id="refresh-transactions" class="py-2 px-4 rounded-md text-white font-bold btn-gradient">
+                        Refresh Transactions
+                     </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="text-gray-400 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Description</th>
+                                <th class="py-3 px-6 text-left">Category</th>
+                                <th class="py-3 px-6 text-left">Amount</th>
+                                <th class="py-3 px-6 text-left">Date</th>
+                                <th class="py-3 px-6 text-left">Notes</th>
+                                <th class="py-3 px-6 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-table-body" class="text-gray-300 text-sm font-light">
+                            <!-- Transactions will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                 <div class="mt-6 text-center text-gray-500 text-xs">
+                    Created by @sefin
+                 </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transaction-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl max-w-md w-full relative">
+            <button id="close-modal-btn" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-2xl font-bold mb-4">Add New Transaction</h2>
+            <form id="add-transaction-form" class="space-y-4">
+                <div>
+                    <label for="transaction-desc" class="block text-sm font-medium text-gray-400">Description</label>
+                    <input type="text" id="transaction-desc" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" required>
+                </div>
+                <div>
+                    <label for="transaction-amount" class="block text-sm font-medium text-gray-400">Amount</label>
+                    <input type="number" step="0.01" id="transaction-amount" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" required>
+                </div>
+                <div>
+                    <label for="transaction-type" class="block text-sm font-medium text-gray-400">Type</label>
+                    <select id="transaction-type" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" required>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="transaction-category" class="block text-sm font-medium text-gray-400">Category</label>
+                    <input type="text" id="transaction-category" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" required>
+                </div>
+                 <div>
+                    <label for="transaction-date" class="block text-sm font-medium text-gray-400">Date</label>
+                    <input type="date" id="transaction-date" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" required>
+                </div>
+                <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white btn-gradient">
+                    Add Transaction
+                </button>
+            </form>
+        </div>
+    </div>
+    
+     <!-- Set Budget Modal -->
+    <div id="budget-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl max-w-sm w-full relative">
+            <button id="close-budget-modal-btn" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-2xl font-bold mb-4">Set Monthly Budget</h2>
+            <form id="set-budget-form" class="space-y-4">
+                <div>
+                    <label for="budget-amount" class="block text-sm font-medium text-gray-400">Budget Amount (<span id="budget-currency-symbol">₹</span>)</label>
+                    <input type="number" step="0.01" id="budget-amount" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" required>
+                </div>
+                <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white" style="background-image: linear-gradient(45deg, #a855f7, #c084fc);">
+                    Save Budget
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="note-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl max-w-md w-full relative">
+            <button id="close-note-modal-btn" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-2xl font-bold mb-4">Add/Edit Note</h2>
+            <form id="note-form" class="space-y-4">
+                <div>
+                    <label for="note-text" class="block text-sm font-medium text-gray-400">Note</label>
+                    <textarea id="note-text" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" rows="4"></textarea>
+                </div>
+                <input type="hidden" id="note-transaction-index">
+                <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white btn-gradient">
+                    Save Note
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const authChoicePage = document.getElementById('auth-choice-page');
+        const loginPage = document.getElementById('login-page');
+        const registerPage = document.getElementById('register-page');
+        const dashboardContainer = document.getElementById('dashboard-container');
+
+        const loginChoiceBtn = document.getElementById('login-choice-btn');
+        const registerChoiceBtn = document.getElementById('register-choice-btn');
+        const backToChoiceLoginBtn = document.getElementById('back-to-choice-login');
+        const backToChoiceRegisterBtn = document.getElementById('back-to-choice-register');
+        
+        const loginForm = document.getElementById('login-form');
+        const loginUsernameInput = document.getElementById('login-username');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginMessage = document.getElementById('login-message');
+        const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+
+        const registerForm = document.getElementById('register-form');
+        const registerUsernameInput = document.getElementById('register-username');
+        const registerPasswordInput = document.getElementById('register-password');
+        const registerMessage = document.getElementById('register-message');
+
+
+        const dashboardUsername = document.getElementById('dashboard-username');
+        const transactionTableBody = document.getElementById('transaction-table-body');
+        const refreshButton = document.getElementById('refresh-transactions');
+        const addTransactionBtn = document.getElementById('add-transaction-btn');
+        const transactionModal = document.getElementById('transaction-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const addTransactionForm = document.getElementById('add-transaction-form');
+        const currencySelect = document.getElementById('currency-select');
+        const logoutBtn = document.getElementById('logout-btn');
+        const setBudgetBtn = document.getElementById('set-budget-btn');
+        const budgetModal = document.getElementById('budget-modal');
+        const closeBudgetModalBtn = document.getElementById('close-budget-modal-btn');
+        const setBudgetForm = document.getElementById('set-budget-form');
+        const budgetAmountInput = document.getElementById('budget-amount');
+        const resetBudgetBtn = document.getElementById('reset-budget-btn');
+        const budgetCurrencySymbolEl = document.getElementById('budget-currency-symbol');
+
+
+        // New note modal elements
+        const noteModal = document.getElementById('note-modal');
+        const closeNoteModalBtn = document.getElementById('close-note-modal-btn');
+        const noteForm = document.getElementById('note-form');
+        const noteTextarea = document.getElementById('note-text');
+        const noteTransactionIndex = document.getElementById('note-transaction-index');
+
+        // Elements for metric cards
+        const totalBalanceEl = document.getElementById('total-balance');
+        const monthlyIncomeEl = document.getElementById('monthly-income');
+        const monthlyExpensesEl = document.getElementById('monthly-expenses');
+        const monthlyBudgetEl = document.getElementById('monthly-budget');
+        const budgetProgressEl = document.getElementById('budget-progress');
+        const budgetStatusEl = document.getElementById('budget-status');
+        
+        // Data for currency conversion (for demonstration)
+        const currencyRates = {
+            'USD': 1.0,
+            'EUR': 0.93,
+            'GBP': 0.82,
+            'INR': 83.0,
+        };
+
+        let myChartInstance;
+
+        // --- AUTHENTICATION LOGIC ---
+
+        function showPage(pageId) {
+            authChoicePage.classList.add('hidden');
+            loginPage.classList.add('hidden');
+            registerPage.classList.add('hidden');
+            dashboardContainer.classList.add('hidden');
+
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const username = localStorage.getItem('username');
+
+            if (isLoggedIn === 'true' && username) {
+                showPage('dashboard-container');
+                dashboardUsername.textContent = username;
+                document.getElementById('user-name-display').textContent = username;
+                
+                const initialCurrency = localStorage.getItem('currency') || 'INR';
+                currencySelect.value = initialCurrency;
+                
+                loadTransactions();
+            } else {
+                showPage('auth-choice-page');
+            }
+        }
+
+        loginChoiceBtn.addEventListener('click', () => showPage('login-page'));
+        registerChoiceBtn.addEventListener('click', () => showPage('register-page'));
+        backToChoiceLoginBtn.addEventListener('click', () => showPage('auth-choice-page'));
+        backToChoiceRegisterBtn.addEventListener('click', () => showPage('auth-choice-page'));
+        
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = registerUsernameInput.value.trim();
+            const password = registerPasswordInput.value.trim();
+            const registeredUser = JSON.parse(localStorage.getItem('registeredUser'));
+            
+            registerMessage.classList.remove('hidden');
+            registerMessage.classList.remove('text-green-400', 'text-red-400');
+            
+            if (registeredUser && registeredUser.username === username) {
+                registerMessage.textContent = 'Username is already taken. Please choose another.';
+                registerMessage.classList.add('text-red-400');
+            } else {
+                const newUser = { username, password };
+                localStorage.setItem('registeredUser', JSON.stringify(newUser));
+                registerMessage.textContent = 'Registration successful! You can now log in.';
+                registerMessage.classList.add('text-green-400');
+                registerForm.reset();
+                setTimeout(() => showPage('login-page'), 1500);
+            }
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = loginUsernameInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            const registeredUser = JSON.parse(localStorage.getItem('registeredUser'));
+            
+            loginMessage.classList.remove('hidden');
+            loginMessage.classList.remove('text-green-400', 'text-red-400');
+
+            if (!registeredUser || registeredUser.username !== username) {
+                loginMessage.textContent = 'Username not found. Please register.';
+                loginMessage.classList.add('text-red-400');
+            } else if (registeredUser.password !== password) {
+                loginMessage.textContent = 'Invalid password.';
+                loginMessage.classList.add('text-red-400');
+            } else {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('username', username);
+                loginMessage.textContent = 'Login successful!';
+                loginMessage.classList.add('text-green-400');
+                setTimeout(checkLoginStatus, 500);
+            }
+        });
+
+        forgotPasswordBtn.addEventListener('click', () => {
+            const username = loginUsernameInput.value.trim();
+            const registeredUser = JSON.parse(localStorage.getItem('registeredUser'));
+
+            if (registeredUser && registeredUser.username === username) {
+                registeredUser.password = 'password';
+                localStorage.setItem('registeredUser', JSON.stringify(registeredUser));
+                loginMessage.textContent = 'Password for ' + username + ' has been reset to "password".';
+                loginMessage.classList.remove('hidden');
+                loginMessage.classList.remove('text-green-400');
+                loginMessage.classList.add('text-red-400');
+            } else {
+                loginMessage.textContent = 'Username not found. Please register first.';
+                loginMessage.classList.remove('hidden');
+                loginMessage.classList.remove('text-red-400');
+                loginMessage.classList.add('text-red-400');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
+            localStorage.removeItem('transactions');
+            localStorage.removeItem('currency');
+            localStorage.removeItem('budget');
+            window.location.reload();
+        });
+
+        // --- TRANSACTION AND DATA LOGIC ---
+        function generateRandomTransactions() {
+            const descriptions = ["Coffee Shop", "Grocery Store", "Freelance Work", "Online Subscription", "Lunch with Friends", "Gas Station"];
+            const categories = ["Food & Drink", "Groceries", "Income", "Subscriptions", "Entertainment", "Transport"];
+            const transactions = [];
+
+            for (let i = 0; i < 6; i++) {
+                const isIncome = Math.random() > 0.5;
+                const amount = (Math.random() * (isIncome ? 500 : 100) + 10);
+                const description = descriptions[Math.floor(Math.random() * descriptions.length)];
+                const category = categories[Math.floor(Math.random() * categories.length)];
+                const date = new Date().toISOString().slice(0, 10);
+
+                transactions.push({
+                    description: description,
+                    category: category,
+                    amount: amount,
+                    type: isIncome ? 'income' : 'expense',
+                    date: date,
+                });
+            }
+            return transactions;
+        }
+
+        function calculateMetrics(transactions, currency) {
+            let totalBalance = 0;
+            let monthlyIncome = 0;
+            let monthlyExpenses = 0;
+            
+            transactions.forEach(tx => {
+                const convertedAmount = tx.amount * (currencyRates[currency] || 1);
+                if (tx.type === 'income') {
+                    totalBalance += convertedAmount;
+                    monthlyIncome += convertedAmount;
+                } else {
+                    totalBalance -= convertedAmount;
+                    monthlyExpenses += convertedAmount;
+                }
+            });
+            
+            // Update the dashboard cards
+            const symbol = getCurrencySymbol(currency);
+            totalBalanceEl.textContent = `${symbol}${totalBalance.toFixed(2)}`;
+            monthlyIncomeEl.textContent = `${symbol}${monthlyIncome.toFixed(2)}`;
+            monthlyExpensesEl.textContent = `${symbol}${monthlyExpenses.toFixed(2)}`;
+
+            // Update budget
+            updateBudget(monthlyExpenses);
+        }
+
+        function updateBudget(monthlyExpenses) {
+            const budgetInBase = parseFloat(localStorage.getItem('budget')) || 0;
+            const currency = currencySelect.value;
+            const symbol = getCurrencySymbol(currency);
+            // Convert the stored base budget to the current display currency
+            const convertedBudget = budgetInBase * (currencyRates[currency] || 1);
+            
+            monthlyBudgetEl.textContent = `${symbol}${convertedBudget.toFixed(2)}`;
+
+            const progress = (monthlyExpenses / convertedBudget) * 100;
+            if (budgetInBase === 0) {
+                 budgetProgressEl.style.width = '0%';
+                 budgetStatusEl.textContent = 'Set a budget to get started!';
+                 budgetProgressEl.classList.remove('bg-red-500', 'bg-purple-500');
+            } else if (progress > 100) {
+                budgetProgressEl.style.width = '100%';
+                budgetProgressEl.classList.remove('bg-purple-500');
+                budgetProgressEl.classList.add('bg-red-500');
+                budgetStatusEl.textContent = 'You are over budget!';
+            } else {
+                budgetProgressEl.style.width = `${progress}%`;
+                budgetProgressEl.classList.remove('bg-red-500');
+                budgetProgressEl.classList.add('bg-purple-500');
+                budgetStatusEl.textContent = `${progress.toFixed(0)}% of budget used`;
+            }
+        }
+
+        function renderTransactions(transactions, currency) {
+            transactionTableBody.innerHTML = '';
+            const symbol = getCurrencySymbol(currency);
+
+            if (transactions.length === 0) {
+                 const row = document.createElement('tr');
+                 row.innerHTML = `<td colspan="6" class="text-center py-4 text-gray-500">No transactions added yet.</td>`;
+                 transactionTableBody.appendChild(row);
+            } else {
+                transactions.forEach((tx, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-700 hover:bg-gray-700';
+                    const convertedAmount = (tx.amount * (currencyRates[currency] || 1)).toFixed(2);
+                    const noteDisplay = tx.note ? `<span>${tx.note}</span>` : `<span class="text-gray-500">No note</span>`;
+                    row.innerHTML = `
+                        <td class="py-3 px-6">${tx.description}</td>
+                        <td class="py-3 px-6">${tx.category}</td>
+                        <td class="py-3 px-6 ${tx.type === 'income' ? 'text-green-400' : 'text-red-400'}">${tx.type === 'income' ? '+' : '-'}${symbol}${convertedAmount}</td>
+                        <td class="py-3 px-6">${tx.date}</td>
+                        <td class="py-3 px-6 flex items-center justify-between">
+                            ${noteDisplay}
+                            <button class="add-note-btn text-blue-400 hover:text-blue-600" data-index="${index}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </button>
+                        </td>
+                        <td class="py-3 px-6">
+                           <button class="delete-transaction-btn text-red-400 hover:text-red-600" data-index="${index}">
+                               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                           </button>
+                        </td>
+                    `;
+                    transactionTableBody.appendChild(row);
+                });
+            }
+        }
+        
+        function getCurrencySymbol(currency) {
+            switch(currency) {
+                case 'EUR': return '€';
+                case 'GBP': return '£';
+                case 'INR': return '₹';
+                default: return '$';
+            }
+        }
+
+        function loadTransactions() {
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderTransactions(transactions, currencySelect.value);
+            calculateMetrics(transactions, currencySelect.value);
+            updateChart(transactions);
+        }
+
+        function updateCurrency(currency) {
+            const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            localStorage.setItem('currency', currency);
+            renderTransactions(transactions, currency);
+            calculateMetrics(transactions, currency);
+        }
+
+        function deleteTransaction(index) {
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            transactions.splice(index, 1);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderTransactions(transactions, currencySelect.value);
+            calculateMetrics(transactions, currencySelect.value);
+            updateChart(transactions);
+        }
+
+        // --- EVENT LISTENERS ---
+        refreshButton.addEventListener('click', () => {
+            const newTransactions = generateRandomTransactions();
+            localStorage.setItem('transactions', JSON.stringify(newTransactions));
+            renderTransactions(newTransactions, currencySelect.value);
+            calculateMetrics(newTransactions, currencySelect.value);
+            updateChart(newTransactions);
+        });
+        
+        addTransactionBtn.addEventListener('click', () => {
+            transactionModal.classList.remove('hidden');
+        });
+        
+        closeModalBtn.addEventListener('click', () => {
+            transactionModal.classList.add('hidden');
+            addTransactionForm.reset();
+        });
+        
+        addTransactionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            const newTransaction = {
+                description: document.getElementById('transaction-desc').value,
+                amount: parseFloat(document.getElementById('transaction-amount').value),
+                type: document.getElementById('transaction-type').value,
+                category: document.getElementById('transaction-category').value,
+                date: document.getElementById('transaction-date').value,
+                note: '' // Initialize with an empty note
+            };
+            transactions.push(newTransaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            
+            // Re-render and update metrics
+            renderTransactions(transactions, currencySelect.value);
+            calculateMetrics(transactions, currencySelect.value);
+            updateChart(transactions);
+            
+            transactionModal.classList.add('hidden');
+            addTransactionForm.reset();
+        });
+        
+        currencySelect.addEventListener('change', (e) => {
+            updateCurrency(e.target.value);
+        });
+        
+        // Update budget modal currency symbol
+        setBudgetBtn.addEventListener('click', () => {
+             budgetCurrencySymbolEl.textContent = getCurrencySymbol(currencySelect.value);
+             budgetModal.classList.remove('hidden');
+        });
+
+        transactionTableBody.addEventListener('click', (e) => {
+            if (e.target.closest('.delete-transaction-btn')) {
+                const index = e.target.closest('.delete-transaction-btn').dataset.index;
+                deleteTransaction(index);
+            } else if (e.target.closest('.add-note-btn')) {
+                const index = e.target.closest('.add-note-btn').dataset.index;
+                let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+                const currentNote = transactions[index].note || '';
+                noteTextarea.value = currentNote;
+                noteTransactionIndex.value = index;
+                noteModal.classList.remove('hidden');
+            }
+        });
+        
+        // Note modal event listeners
+        closeNoteModalBtn.addEventListener('click', () => {
+            noteModal.classList.add('hidden');
+            noteForm.reset();
+        });
+        
+        noteForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const index = noteTransactionIndex.value;
+            const newNote = noteTextarea.value;
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            
+            if (transactions[index]) {
+                transactions[index].note = newNote;
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                renderTransactions(transactions, currencySelect.value);
+            }
+            noteModal.classList.add('hidden');
+            noteForm.reset();
+        });
+
+
+        closeBudgetModalBtn.addEventListener('click', () => {
+             budgetModal.classList.add('hidden');
+             setBudgetForm.reset();
+        });
+
+        setBudgetForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const budgetAmount = parseFloat(budgetAmountInput.value);
+            if (!isNaN(budgetAmount) && budgetAmount > 0) {
+                 // Bug Fix: Convert the entered amount to a base currency (USD) before storing.
+                 const currency = currencySelect.value;
+                 const baseBudgetAmount = budgetAmount / (currencyRates[currency] || 1);
+                 localStorage.setItem('budget', baseBudgetAmount);
+                 calculateMetrics(JSON.parse(localStorage.getItem('transactions')) || [], currencySelect.value);
+                 budgetModal.classList.add('hidden');
+            }
+        });
+
+        resetBudgetBtn.addEventListener('click', () => {
+            localStorage.removeItem('budget');
+            calculateMetrics(JSON.parse(localStorage.getItem('transactions')) || [], currencySelect.value);
+        });
+
+        // --- CHART LOGIC ---
+        function updateChart(transactions) {
+            if (myChartInstance) {
+                myChartInstance.destroy();
+            }
+            const monthlyData = {};
+            transactions.forEach(tx => {
+                const month = new Date(tx.date).toLocaleString('default', { month: 'long' });
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { income: 0, expense: 0 };
+                }
+                if (tx.type === 'income') {
+                    monthlyData[month].income += tx.amount;
+                } else {
+                    monthlyData[month].expense += tx.amount;
+                }
+            });
+            
+            const labels = Object.keys(monthlyData);
+            const incomeData = labels.map(label => monthlyData[label].income);
+            const expenseData = labels.map(label => monthlyData[label].expense);
+            
+            const data = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Monthly Income',
+                        data: incomeData,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8,
+                    },
+                    {
+                        label: 'Monthly Expenses',
+                        data: expenseData,
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.8,
+                    }
+                ]
+            };
+            
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { color: 'white' } },
+                        tooltip: { mode: 'index', intersect: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: 'white' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        y: { ticks: { color: 'white' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                    }
+                },
+            };
+
+            const ctx = document.getElementById('myChart');
+            myChartInstance = new Chart(ctx, config);
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+</body>
+</html>
